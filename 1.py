@@ -4,6 +4,7 @@ from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QPushButton, QLineEdit
 import requests
 import os
+import random
 
 
 class Example(QMainWindow):
@@ -13,54 +14,59 @@ class Example(QMainWindow):
 
     def initUI(self):
         # интерфейс
-        self.setGeometry(150, 150, 780, 500)
-        self.setWindowTitle('Большая задача по Maps API. Часть №7')
+        self.setGeometry(150, 150, 780, 470)
+        self.setWindowTitle('Угадай-ка город')
 
-        # кнопка
-        self.btn = QPushButton('Искать', self)
-        self.btn.resize(150, 30)
-        self.btn.move(10, 10)
-        self.btn.clicked.connect(self.hello)
+        # список городов(7шт)
+        self.a = ['Ишимбай', 'Стерлитамак', 'Мелеуз', 'Уфа', 'Салават', 'Нефтекамск', 'Октябрьский']
+        self.c = random.choice(self.a)
 
-        # кнопка2
-        self.btn2 = QPushButton('Сброс результата', self)
-        self.btn2.resize(150, 30)
-        self.btn2.move(10, 90)
-        self.btn2.clicked.connect(self.hello2)
-
-        # ввод данных
-        self.edit1 = QLineEdit(self)
-        self.edit1.setFixedWidth(150)
-        self.edit1.setFixedHeight(30)
-        self.edit1.move(10, 50)
-
-        # окно вывода адреса
+        # компьютер загадывает город
         self.lbl = QLabel(self)
-        self.lbl.setFixedWidth(500)
-        self.lbl.setFixedHeight(30)
-        self.lbl.move(170, 465)
+        self.lbl.resize(150, 30)
+        self.lbl.move(10, 10)
+        self.lbl.setText('Компьютер рандомно\n загадывает город:')
 
-        # кнопка3
-        self.btn3 = QPushButton('почтовый индекс \n on/off', self)
-        self.btn3.resize(150, 40)
-        self.btn3.move(10, 130)
-        self.btn3.clicked.connect(self.hello3)
-        self.post = False
+        # кнопка загадать
+        self.btn = QPushButton('загадать', self)
+        self.btn.resize(150, 30)
+        self.btn.move(10, 40)
+        self.btn.clicked.connect(self.h)
 
+        # игрок угадывает название города
+        self.edt = QLineEdit(self)
+        self.edt.resize(150, 30)
+        self.edt.move(10, 80)
 
-        # первоначальные данные для вывода карты
-        self.lon, self.lat = 56.045221, 53.419472
-        self.delta, self.l_list = 0.002, ['map', 'sat', 'sat,skl']
-        self.api_server, self.l_num = "http://static-maps.yandex.ru/1.x/", 0
-        self.params = {
-            "ll": ",".join([str(self.lon), str(self.lat)]),
-            "spn": ",".join([str(self.delta), str(self.delta)]),
-            "l": self.l_list[self.l_num],
-            "pt": f"{','.join([str(self.lon), str(self.lat)])},pm2gnl"}
-        # запрос
-        response = requests.get(self.api_server, self.params)
-        with open("map.png", "wb") as file:
-            file.write(response.content)
+        # кнопка угадывания
+        self.btn2 = QPushButton('Угадать', self)
+        self.btn2.resize(150, 30)
+        self.btn2.move(10, 120)
+        self.btn2.clicked.connect(self.h2)
+
+        # кнопка игрока перемотка слайда
+        self.btn3 = QPushButton('Перемотать слайд', self)
+        self.btn3.resize(150, 30)
+        self.btn3.move(10, 160)
+        self.btn3.clicked.connect(self.h3)
+
+        # вывести название города
+        self.btn4 = QPushButton('Вывести/скрыть\n название города', self)
+        self.btn4.resize(150, 40)
+        self.btn4.move(10, 200)
+        self.btn4.clicked.connect(self.h4)
+
+        # название города
+        self.lbl2 = QLabel(self)
+        self.lbl2.resize(150, 30)
+        self.lbl2.move(10, 250)
+        self.lbl2.setText('')
+
+        # Победа.проигрыш
+        self.lbl3 = QLabel(self)
+        self.lbl3.resize(150, 30)
+        self.lbl3.move(10, 290)
+        self.lbl3.setText('')
 
         # картинка
         self.pixmap = QPixmap()
@@ -68,110 +74,68 @@ class Example(QMainWindow):
         self.image.move(170, 10)
         self.image.resize(600, 450)
 
-        # загрузка картинки
-        self.pixmap = QPixmap("map.png")
-        os.remove('map.png')
-        self.image.setPixmap(self.pixmap)
+    def h(self):
+        self.lbl3.setText('')
+        self.lbl2.setText('')
+        self.edt.setText('')
+        self.c = random.choice(self.a)
+        self.k = random.choice(['map', 'sat'])
+        self.hh()
 
-    def hello3(self):
-        if self.lbl.text() != '':
-            if self.post:
-                self.post = False
-                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
-                self.lbl.setText(address)
-            else:
-                self.post = True
-                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
-                post = self.coodrinates['metaDataProperty']['GeocoderMetaData']['Address']['postal_code']
-                self.lbl.setText(f'{address} {post}')
+    def h4(self):
+        if self.lbl2.text() == self.c:
+            self.lbl2.setText('')
+        else:
+            self.lbl2.setText(self.c)
 
     def selection_of_scale(self, a):
         b = [float(i) for i in a['lowerCorner'].split()]
         c = [float(i) for i in a['upperCorner'].split()]
-        x, y = c[0] - b[0], c[1] - b[1]
-        return ",".join([str(x), str(y)])
+        x, y = (c[0] - b[0]) / 18, (c[1] - b[1]) / 18
+        return ",".join([str(x), str(y)]), x, y
 
-    def keyPressEvent(self, event: QKeyEvent):
-        b = False
-        if event.key() == 16777238:
-            self.delta *= 2
-            if self.delta > 10:
-                self.delta = 10
-            b = True
-        if event.key() == 16777239:
-            self.delta /= 2
-            if self.delta < 0:
-                self.delta = 0
-            b = True
-        if event.key() == 16777220:
-            self.l_num += 1
-            self.l_num %= 3
-            b = True
-        if event.key() == 68:
-            self.lon += 0.0001
-            b = True
-        if event.key() == 87:
-            self.lat += 0.0001
-            b = True
-        if event.key() == 83:
-            self.lat -= 0.0001
-            b = True
-        if event.key() == 65:
-            self.lon -= 0.0001
-            b = True
-        if b:
-            self.params["l"] = self.l_list[self.l_num]
-            self.params['spn'] = ",".join([str(self.delta), str(self.delta)])
-            self.params["ll"] = ",".join([str(self.lon), str(self.lat)])
-            response = requests.get(self.api_server, params=self.params)
-            map_file = "map.png"
-            with open(map_file, "wb") as file:
-                file.write(response.content)
-            # загрузка картинки
-            self.pixmap = QPixmap("map.png")
-            os.remove('map.png')
-            self.image.setPixmap(self.pixmap)
+    def h2(self):
+        if self.edt.text().lower() == self.c.lower():
+            self.lbl3.setText('Вы выйграли!!!')
+        else:
+            self.lbl3.setText('Вы проиграли.')
 
-    def hello2(self):
-        self.post = False
-        self.lbl.setText('')
-        if 'pt' in self.params:
-            del self.params['pt']
+    def h3(self):
+        bb = self.selection_of_scale(self.aa)
+        x = random.choice([1, -1]) * random.randint(1, 7) * bb[1] + float(self.coodrinates.split()[0])
+        y = random.choice([1, -1]) * random.randint(1, 7) * bb[2] + float(self.coodrinates.split()[1])
+        self.params["ll"] = ','.join([str(x), str(y)])
+        # запрос
         response = requests.get(self.api_server, params=self.params)
-        map_file = "map.png"
-        with open(map_file, "wb") as file:
+        with open("map.png", "wb") as file:
             file.write(response.content)
         # загрузка картинки
         self.pixmap = QPixmap("map.png")
         os.remove('map.png')
         self.image.setPixmap(self.pixmap)
 
-    def hello(self):
+    def hh(self):
         geocoder_params = {
             "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
-            "geocode": self.edit1.text(),
+            "geocode": self.c,
             "format": "json"}
         response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=geocoder_params)
         if response:
             # Находим координаты нашего объекта
             json_response = response.json()
             self.coodrinates = json_response["response"]["GeoObjectCollection"][
-                "featureMember"][0]["GeoObject"]
-            if not self.post:
-                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
-                self.lbl.setText(address)
-            else:
-                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
-                post = self.coodrinates['metaDataProperty']['GeocoderMetaData']['Address']['postal_code']
-                self.lbl.setText(f'{address} {post}')
-            a = json_response["response"]["GeoObjectCollection"][
+                "featureMember"][0]["GeoObject"]["Point"]["pos"]
+            self.aa = json_response["response"]["GeoObjectCollection"][
                 "featureMember"][0]["GeoObject"]['boundedBy']['Envelope']
-            coodrinates = self.coodrinates["Point"]["pos"]
-            self.lon, self.lat = [float(i) for i in coodrinates.split()]
-            points = ','.join(coodrinates.split())
-            self.params["ll"] = points
-            self.params["pt"] = f"{points},pm2gnl"
-            self.params['spn'] = self.selection_of_scale(a)
+            points = ','.join(self.coodrinates.split())
+            self.params = {}
+            self.api_server = "http://static-maps.yandex.ru/1.x/"
+            bb = self.selection_of_scale(self.aa)
+            self.params['spn'] = bb[0]
+            x = random.choice([1, -1]) * random.randint(1, 7) * bb[1] + float(self.coodrinates.split()[0])
+            y = random.choice([1, -1]) * random.randint(1, 7) * bb[2] + float(self.coodrinates.split()[1])
+            self.params["ll"] = ','.join([str(x), str(y)])
+            self.params["l"] = self.k
 
             # запрос
             response = requests.get(self.api_server, params=self.params)
