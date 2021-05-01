@@ -1,52 +1,33 @@
-import pygame
-class Board:
-    # создание поля
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.board = [[0] * width for _ in range(height)]
-        # значения по умолчанию
-        self.left = 10
-        self.top = 10
-        self.cell_size = 30
+from zipfile import ZipFile
+b = {}
 
-    # настройка внешнего вида
-    def set_view(self, left, top, cell_size):
-        self.left = left
-        self.top = top
-        self.cell_size = cell_size
 
-    def render(self, screen):
-        y = self.top
-        for i in range(self.height):
-            x = self.left
-            for j in range(self.width):
-                pygame.draw.rect(screen, (255, 255, 255), (x, y, self.cell_size, self.cell_size), 1)
-                x += self.cell_size
-            y += self.cell_size
-
-    def get_cell(self, mouse_pos):
-        if self.left <= mouse_pos[0] <= self.left + self.cell_size * self.width and \
-        self.top <= mouse_pos[1] <= self.top + self.cell_size * self.height:
-            x = (mouse_pos[0] - self.left) // self.cell_size
-            y = (mouse_pos[1] - self.top) // self.cell_size
-            print(x, y)
-            return (x, y)
+def bb(a):
+    c = b
+    for i in range(len(a)):
+        if a[i] in c:
+            c = c[a[i]]
         else:
-            return None
-
-    def get_click(self, mouse_pos):
-        cell = self.get_cell(mouse_pos)
+            c[a[i]] = {}
 
 
-board = Board(5, 7)
-board.set_view(100, 100, 50)
-screen = pygame.display.set_mode((500, 500))
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    screen.fill((0, 0, 0))
-    board.render(screen)
-    pygame.display.flip()
+with ZipFile('input.zip') as myzip:
+    a = list(myzip.namelist())
+    for i in range(len(a)):
+        if a[i][-1] == '/':
+            a[i] = a[i][:-1]
+    a = [i.split('/') for i in myzip.namelist()]
+    for i in range(len(a)):
+        if a[i][-1] == '':
+            a[i] = a[i][:-1]
+    for i in a:
+        bb(i)
+
+
+def aa(a, b):
+    for key in a:
+        print(b * ' ' + key)
+        aa(a[key], b + 2)
+
+
+aa(b, 0)
