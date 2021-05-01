@@ -40,6 +40,13 @@ class Example(QMainWindow):
         self.lbl.setFixedHeight(30)
         self.lbl.move(170, 465)
 
+        # кнопка3
+        self.btn3 = QPushButton('почтовый индекс \n on/off', self)
+        self.btn3.resize(150, 40)
+        self.btn3.move(10, 130)
+        self.btn3.clicked.connect(self.hello3)
+        self.post = False
+
 
         # первоначальные данные для вывода карты
         self.lon, self.lat = 56.045221, 53.419472
@@ -66,6 +73,18 @@ class Example(QMainWindow):
         os.remove('map.png')
         self.image.setPixmap(self.pixmap)
 
+    def hello3(self):
+        if self.lbl.text() != '':
+            if self.post:
+                self.post = False
+                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
+                self.lbl.setText(address)
+            else:
+                self.post = True
+                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
+                post = self.coodrinates['metaDataProperty']['GeocoderMetaData']['Address']['postal_code']
+                self.lbl.setText(f'{address} {post}')
+
     def selection_of_scale(self, a):
         b = [float(i) for i in a['lowerCorner'].split()]
         c = [float(i) for i in a['upperCorner'].split()]
@@ -77,7 +96,7 @@ class Example(QMainWindow):
         if event.key() == 16777238:
             self.delta *= 2
             if self.delta > 10:
-                delta = 10
+                self.delta = 10
             b = True
         if event.key() == 16777239:
             self.delta /= 2
@@ -114,6 +133,7 @@ class Example(QMainWindow):
             self.image.setPixmap(self.pixmap)
 
     def hello2(self):
+        self.post = False
         self.lbl.setText('')
         if 'pt' in self.params:
             del self.params['pt']
@@ -135,13 +155,18 @@ class Example(QMainWindow):
         if response:
             # Находим координаты нашего объекта
             json_response = response.json()
-            coodrinates = json_response["response"]["GeoObjectCollection"][
-                "featureMember"][0]["GeoObject"]["Point"]["pos"]
-            address = json_response["response"]["GeoObjectCollection"][
-                "featureMember"][0]["GeoObject"]['metaDataProperty']['GeocoderMetaData']['text']
-            self.lbl.setText(address)
+            self.coodrinates = json_response["response"]["GeoObjectCollection"][
+                "featureMember"][0]["GeoObject"]
+            if not self.post:
+                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
+                self.lbl.setText(address)
+            else:
+                address = self.coodrinates['metaDataProperty']['GeocoderMetaData']['text']
+                post = self.coodrinates['metaDataProperty']['GeocoderMetaData']['Address']['postal_code']
+                self.lbl.setText(f'{address} {post}')
             a = json_response["response"]["GeoObjectCollection"][
                 "featureMember"][0]["GeoObject"]['boundedBy']['Envelope']
+            coodrinates = self.coodrinates["Point"]["pos"]
             self.lon, self.lat = [float(i) for i in coodrinates.split()]
             points = ','.join(coodrinates.split())
             self.params["ll"] = points
