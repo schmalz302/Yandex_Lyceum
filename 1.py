@@ -13,7 +13,7 @@ class Example(QMainWindow):
 
     def initUI(self):
         # интерфейс
-        self.setGeometry(150, 150, 780, 470)
+        self.setGeometry(150, 150, 780, 500)
         self.setWindowTitle('Большая задача по Maps API. Часть №7')
 
         # кнопка
@@ -33,6 +33,13 @@ class Example(QMainWindow):
         self.edit1.setFixedWidth(150)
         self.edit1.setFixedHeight(30)
         self.edit1.move(10, 50)
+
+        # окно вывода адреса
+        self.lbl = QLabel(self)
+        self.lbl.setFixedWidth(500)
+        self.lbl.setFixedHeight(30)
+        self.lbl.move(170, 465)
+
 
         # первоначальные данные для вывода карты
         self.lon, self.lat = 56.045221, 53.419472
@@ -107,6 +114,7 @@ class Example(QMainWindow):
             self.image.setPixmap(self.pixmap)
 
     def hello2(self):
+        self.lbl.setText('')
         if 'pt' in self.params:
             del self.params['pt']
         response = requests.get(self.api_server, params=self.params)
@@ -117,7 +125,6 @@ class Example(QMainWindow):
         self.pixmap = QPixmap("map.png")
         os.remove('map.png')
         self.image.setPixmap(self.pixmap)
-
 
     def hello(self):
         geocoder_params = {
@@ -130,6 +137,9 @@ class Example(QMainWindow):
             json_response = response.json()
             coodrinates = json_response["response"]["GeoObjectCollection"][
                 "featureMember"][0]["GeoObject"]["Point"]["pos"]
+            address = json_response["response"]["GeoObjectCollection"][
+                "featureMember"][0]["GeoObject"]['metaDataProperty']['GeocoderMetaData']['text']
+            self.lbl.setText(address)
             a = json_response["response"]["GeoObjectCollection"][
                 "featureMember"][0]["GeoObject"]['boundedBy']['Envelope']
             self.lon, self.lat = [float(i) for i in coodrinates.split()]
