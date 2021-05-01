@@ -1,31 +1,13 @@
-import os
-aa = input('Введите название каталога: ')
-cc = os.listdir(aa)
-f = []
+import shutil
+import datetime
 
 
-# функция для представления размера в нормальном виде
-def human_read_format(size):
-    if size < 1024:
-        return f'{round(size)}Б'
-    elif size / 1024 < 1024:
-        a = size / 1024
-        return f'{round(a)}КБ'
-    elif size / (1024 ** 2) < 1024:
-        a = size / (1024 ** 2)
-        return f'{round(a)}МБ'
-    elif size / (1024 ** 3) < 1024:
-        a = size / (1024 ** 3)
-        return f'{round(a)}ГБ'
+def make_reserve_arc(source, dest):
+    now = datetime.datetime.now()
+    f = f'{now.day}.{now.month}.{now.year}-{now.hour}.{now.minute}.{now.second}'
+    shutil.make_archive(f'archive_{f}', 'zip', root_dir=source)
+    shutil.move(f'archive_{f}.zip', dest)
 
 
-for i in os.listdir(aa):
-    c = os.path.getsize(f"{aa}\{i}")
-    if os.path.isdir(f"{aa}\{i}"):
-        f.append([len(os.listdir(f"{aa}\{i}")), human_read_format(c), c, i])
-    else:
-        f.append([0, human_read_format(c), c, i])
-f = sorted(f, key=lambda x: x[0])[-10:]
-f = sorted(f, key=lambda x: x[2])[::-1]
-for i in range(len(f)):
-    print(f"{f[i][3]}{(40 - len(str(f[i][3]))) * ' '}-{f[i][1]}")
+make_reserve_arc(input("Введите путь к каталогу, который надо архивировать: "),
+                 input("Введите путь к каталогу, в который необходимо поместить результат: "))
