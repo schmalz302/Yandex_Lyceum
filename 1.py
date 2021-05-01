@@ -1,138 +1,52 @@
-import sys
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtGui import QKeyEvent
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QPushButton, QLineEdit
 import requests
+import pygame
 import os
+api_server = "http://static-maps.yandex.ru/1.x/"
 
+lon = input('Введите долготу:')
+lat = input('Введите ширину:')
+delta = float(input('Введите область показа:'))
 
-class Example(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
+params = {
+    "ll": ",".join([lon, lat]),
+    "spn": ",".join([str(delta), str(delta)]),
+    "l": "map"
+}
+response = requests.get(api_server, params=params)
+map_file = "map.png"
+with open(map_file, "wb") as file:
+    file.write(response.content)
 
-    def initUI(self):
-        # интерфейс
-        self.setGeometry(150, 150, 780, 470)
-        self.setWindowTitle('Большая задача по Maps API. Часть №5')
-
-        # кнопка
-        self.btn = QPushButton('Искать', self)
-        self.btn.resize(150, 30)
-        self.btn.move(10, 10)
-        self.btn.clicked.connect(self.hello)
-
-        # ввод данных
-        self.edit1 = QLineEdit(self)
-        self.edit1.setFixedWidth(150)
-        self.edit1.setFixedHeight(30)
-        self.edit1.move(10, 50)
-
-        # первоначальные данные для вывода карты
-
-        self.lon, self.lat = 56.045221, 53.419472
-        self.delta, self.l_list = 0.002, ['map', 'sat', 'sat,skl']
-        self.api_server, self.l_num = "http://static-maps.yandex.ru/1.x/", 0
-        self.params = {
-            "ll": ",".join([str(self.lon), str(self.lat)]),
-            "spn": ",".join([str(self.delta), str(self.delta)]),
-            "l": self.l_list[self.l_num],
-            "pt": f"{','.join([str(self.lon), str(self.lat)])},pm2gnl"}
-        # запрос
-        response = requests.get(self.api_server, self.params)
-        with open("map.png", "wb") as file:
-            file.write(response.content)
-
-        # картинка
-        self.pixmap = QPixmap()
-        self.image = QLabel(self)
-        self.image.move(170, 10)
-        self.image.resize(600, 450)
-
-        # загрузка картинки
-        self.pixmap = QPixmap("map.png")
-        os.remove('map.png')
-        self.image.setPixmap(self.pixmap)
-
-    def selection_of_scale(self, a):
-        b = [float(i) for i in a['lowerCorner'].split()]
-        c = [float(i) for i in a['upperCorner'].split()]
-        x, y = c[0] - b[0], c[1] - b[1]
-        return ",".join([str(x), str(y)])
-
-    def keyPressEvent(self, event: QKeyEvent):
+pygame.init()
+screen = pygame.display.set_mode((600, 450))
+pygame.display.set_caption('Большая задача по Maps API. Часть №2')
+screen.blit(pygame.image.load(map_file), (0, 0))
+pygame.display.flip()
+b = False
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == 1073741899:
+                delta *= 2
+                if delta > 10:
+                    delta = 10
+                b = True
+            if event.key == 1073741902:
+                delta /= 2
+                if delta < 0:
+                    delta = 0
+                b = True
+    if b:
         b = False
-        if event.key() == 16777238:
-            self.delta *= 2
-            if self.delta > 10:
-                delta = 10
-            b = True
-        if event.key() == 16777239:
-            self.delta /= 2
-            if self.delta < 0:
-                self.delta = 0
-            b = True
-        if event.key() == 16777220:
-            self.l_num += 1
-            self.l_num %= 3
-            b = True
-        if event.key() == 68:
-            self.lon += 0.001
-            b = True
-        if event.key() == 87:
-            self.lat += 0.001
-            b = True
-        if event.key() == 83:
-            self.lat -= 0.001
-            b = True
-        if event.key() == 65:
-            self.lon -= 0.001
-            b = True
-        if b:
-            self.params["l"] = self.l_list[self.l_num]
-            self.params['spn'] = ",".join([str(self.delta), str(self.delta)])
-            self.params["ll"] = ",".join([str(self.lon), str(self.lat)])
-            response = requests.get(self.api_server, params=self.params)
-            map_file = "map.png"
-            with open(map_file, "wb") as file:
-                file.write(response.content)
-            # загрузка картинки
-            self.pixmap = QPixmap("map.png")
-            os.remove('map.png')
-            self.image.setPixmap(self.pixmap)
-
-
-    def hello(self):
-        geocoder_params = {
-            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
-            "geocode": self.edit1.text(),
-            "format": "json"}
-        response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=geocoder_params)
-        if response:
-            # Находим координаты нашего объекта
-            json_response = response.json()
-            coodrinates = json_response["response"]["GeoObjectCollection"][
-                "featureMember"][0]["GeoObject"]["Point"]["pos"]
-            a = json_response["response"]["GeoObjectCollection"][
-                "featureMember"][0]["GeoObject"]['boundedBy']['Envelope']
-            self.lon, self.lat = [float(i) for i in coodrinates.split()]
-            points = ','.join(coodrinates.split())
-            self.params["ll"] = points
-            self.params["pt"] = f"{points},pm2gnl"
-            self.params['spn'] = self.selection_of_scale(a)
-
-            # запрос
-            response = requests.get(self.api_server, params=self.params)
-            with open("map.png", "wb") as file:
-                file.write(response.content)
-            # загрузка картинки
-            self.pixmap = QPixmap("map.png")
-            os.remove('map.png')
-            self.image.setPixmap(self.pixmap)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = Example()
-    ex.show()
-    sys.exit(app.exec())
+        params['spn'] = ",".join([str(delta), str(delta)]),
+        response = requests.get(api_server, params=params)
+        map_file = "map.png"
+        with open(map_file, "wb") as file:
+            file.write(response.content)
+        screen.blit(pygame.image.load(map_file), (0, 0))
+        pygame.display.flip()
+pygame.quit()
+os.remove(map_file)
