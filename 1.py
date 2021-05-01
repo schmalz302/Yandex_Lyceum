@@ -1,15 +1,14 @@
-import pygame.font
+import pygame
 from copy import deepcopy
-from random import *
+from random import choice
 
 
 class Board:
     # создание поля
-    pygame.init()
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.board = [[-1] * width for i in range(height)]
+        self.board = [[0] * width for i in range(height)]
         # значения по умолчанию
         self.left = 10
         self.top = 10
@@ -28,14 +27,9 @@ class Board:
             x = self.left
             s = self.cell_size
             for j in range(self.width):
-                if self.board[i][j] == 10:
-                    pygame.draw.rect(screen, pygame.Color('red'), (x + 1, y + 1, self.cell_size - 1,
+                if self.board[i][j] == 1:
+                    pygame.draw.rect(screen, pygame.Color('green'), (x + 1, y + 1, self.cell_size - 1,
                                                                      self.cell_size - 1), 0)
-                else:
-                    if self.board[i][j] != -1:
-                        font = pygame.font.Font(None, 30)
-                        text = font.render(f"{self.board[i][j]}", True, pygame.Color('green'))
-                        screen.blit(text, [x + 1, y + 1])
                 pygame.draw.rect(screen, pygame.Color('white'), (x, y, self.cell_size, self.cell_size), 1)
                 x += self.cell_size
             y += self.cell_size
@@ -45,112 +39,80 @@ class Board:
         self.top <= mouse_pos[1] <= self.top + self.cell_size * self.height:
             x = (mouse_pos[0] - self.left) // self.cell_size
             y = (mouse_pos[1] - self.top) // self.cell_size
-            return (y, x)
+            return (x, y)
         else:
-            return False
+            return None
 
-
-class Minesweeper(Board):
-    def __init__(self, width, height, a):
-        super().__init__(width, height)
-        c = 0
-        while c != a:
-            x = randint(0, height - 1)
-            y = randint(0, width - 1)
-            if self.board[x][y] != 10:
-                self.board[x][y] = 10
-                c += 1
-    def num(self, x, y):
-        c = 0
-        if 0 <= x < len(self.board[0]) and 0 <= y + 1 < len(self.board):
-            if self.board[x][y + 1] == 10:
-                c += 1
-        if 0 <= x < len(self.board[0]) and 0 <= y - 1 < len(self.board):
-            if self.board[x][y - 1] == 10:
-                c += 1
-        if 0 <= x + 1 < len(self.board[0]) and 0 <= y < len(self.board):
-            if self.board[x + 1][y] == 10:
-                c += 1
-        if 0 <= x - 1 < len(self.board[0]) and 0 <= y < len(self.board):
-            if self.board[x - 1][y] == 10:
-                c += 1
-        if 0 <= x + 1 < len(self.board[0]) and 0 <= y - 1 < len(self.board):
-            if self.board[x + 1][y - 1] == 10:
-                c += 1
-        if 0 <= x + 1 < len(self.board[0]) and 0 <= y + 1 < len(self.board):
-            if self.board[x + 1][y + 1] == 10:
-                c += 1
-        if 0 <= x - 1 < len(self.board[0]) and 0 <= y - 1 < len(self.board):
-            if self.board[x - 1][y - 1] == 10:
-                c += 1
-        if 0 <= x - 1 < len(self.board[0]) and 0 <= y + 1 < len(self.board):
-            if self.board[x - 1][y + 1] == 10:
-                c += 1
-        return c
-
-    def rec(self, x, y):
-        if (x, y) not in self.c:
-            self.c.append((x, y))
-            if 0 <= x < len(self.board[0]) and 0 <= y + 1 < len(self.board):
-                self.board[x][y + 1] = self.num(x, y + 1)
-                if not self.num(x, y + 1):
-                    self.rec(x, y + 1)
-            if 0 <= x < len(self.board[0]) and 0 <= y - 1 < len(self.board):
-                self.board[x][y - 1] = self.num(x, y - 1)
-                if not self.num(x, y - 1):
-                    self.rec(x, y - 1)
-            if 0 <= x + 1 < len(self.board[0]) and 0 <= y < len(self.board):
-                self.board[x + 1][y] = self.num(x + 1, y)
-                if not self.num(x + 1, y):
-                    self.rec(x + 1, y)
-            if 0 <= x - 1 < len(self.board[0]) and 0 <= y < len(self.board):
-                self.board[x - 1][y] = self.num(x - 1, y)
-                if not self.num(x - 1, y):
-                    self.rec(x - 1, y)
-            if 0 <= x + 1 < len(self.board[0]) and 0 <= y - 1 < len(self.board):
-                self.board[x + 1][y - 1] = self.num(x + 1, y - 1)
-                if not self.num(x + 1, y - 1):
-                    self.rec(x + 1, y - 1)
-            if 0 <= x + 1 < len(self.board[0]) and 0 <= y + 1 < len(self.board):
-                self.board[x + 1][y + 1] = self.num(x + 1, y + 1)
-                if not self.num(x + 1, y + 1):
-                    self.rec(x + 1, y + 1)
-            if 0 <= x - 1 < len(self.board[0]) and 0 <= y - 1 < len(self.board):
-                self.board[x - 1][y - 1] = self.num(x - 1, y - 1)
-                if not self.num(x - 1, y - 1):
-                    self.rec(x - 1, y - 1)
-            if 0 <= x - 1 < len(self.board[0]) and 0 <= y + 1 < len(self.board):
-                self.board[x - 1][y + 1] = self.num(x - 1, y + 1)
-                if not self.num(x - 1, y + 1):
-                    self.rec(x - 1, y + 1)
-
-    def open_cell(self):
-        a = self.get_cell(pygame.mouse.get_pos())
-        if a and self.board[a[0]][a[1]] == -1:
-            x, y = a
-            c = self.num(x, y)
-            if c:
-                self.board[x][y] = c
+    def get_click(self, mouse_pos):
+        a = self.get_cell(mouse_pos)
+        j, i = a
+        if not a is None:
+            if self.board[i][j] == 1:
+                self.board[i][j] = 0
             else:
-                self.c = []
-                self.board[x][y] = c
-                self.rec(x, y)
+                self.board[i][j] = 1
 
 
+class Life(Board):
+    def __init__(self, width, height):
+        super().__init__(width, height)
 
-x, y = 15, 15
-board = Minesweeper(x, y, 40)
-sz = board.cell_size
-lf, tp = board.left * 2 + x * sz, board.top * 2 + y * sz
-screen = pygame.display.set_mode((lf, tp))
-pygame.display.set_caption('Папа сапёра')
+    def next_move(self):
+        if self.stop:
+            c = deepcopy(self.board)
+            for i in range(self.height):
+                for j in range(self.width):
+                    n = 0
+                    w = self.width
+                    h = self.height
+                    n += [c[(i + 1) % w][j]].count(1)
+                    n += [c[(i - 1) % w][j]].count(1)
+                    n += [c[i][(j + 1) % h]].count(1)
+                    n += [c[i][(j - 1) % h]].count(1)
+                    n += [c[(i + 1) % w][(j + 1) % h]].count(1)
+                    n += [c[(i + 1) % w][(j - 1) % h]].count(1)
+                    n += [c[(i - 1) % w][(j + 1) % h]].count(1)
+                    n += [c[(i - 1) % w][(j - 1) % h]].count(1)
+                    if c[i][j] == 0 and n == 3:
+                        self.board[i][j] = 1
+                    if c[i][j] == 1 and n != 2 and n != 3:
+                        self.board[i][j] = 0
+
+
+board = Life(30, 30)
+board.set_view(20, 20, 18)
+screen = pygame.display.set_mode((600, 600))
+pygame.display.set_caption('Жизнь на Торе')
 running = True
+MYEVENTTYPE = pygame.USEREVENT + 1
+a = 500
+pygame.time.set_timer(MYEVENTTYPE, a)
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == MYEVENTTYPE:
+            board.next_move()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            board.open_cell()
+            if event.button == 1:
+                board.get_click(pygame.mouse.get_pos())
+            if event.button == 3:
+                board.stop = True
+            if event.button == 4:
+                if a > 50:
+                    a -= 50
+                    if a < 50:
+                        a = 50
+                pygame.time.set_timer(MYEVENTTYPE, a)
+            if event.button == 5:
+                a += 50
+                pygame.time.set_timer(MYEVENTTYPE, a)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                if board.stop:
+                    board.stop = False
+                else:
+                    board.stop = True
     screen.fill((0, 0, 0))
     board.render(screen)
     pygame.display.flip()
